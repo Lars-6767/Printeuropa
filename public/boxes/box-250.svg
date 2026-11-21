@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 280" role="img" aria-label="Bereyl-box 250 liter">
+  <ellipse cx="130" cy="262" rx="100" ry="10" fill="#283106" opacity=".12"/>
+  <rect x="40" y="100" width="180" height="150" rx="14" fill="#283106"/>
+  <rect x="34" y="86" width="192" height="26" rx="10" fill="#3a450f"/>
+  <rect x="96" y="92" width="68" height="10" rx="5" fill="#B9D53A"/>
+  <text x="130" y="175" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="800" font-size="24" fill="#F8F7F2">Bereyl</text>
+  <text x="130" y="203" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="16" fill="#B9D53A">250 L</text>
+</svg>
