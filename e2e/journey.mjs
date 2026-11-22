@@ -89,8 +89,6 @@ try {
   const link = linkFrom(mail.html);
   await page.goto(link);
   await page.getByRole("button", { name: "Doorgaan naar Mijn Bereyl" }).click();
-  await page.waitForURL(/portaal\/account\?welkom/);
-  await page.getByRole("link", { name: "Ga verder zonder wachtwoord" }).click();
   await page.waitForURL(/portaal\/voorstel/);
   await shot(page, "03-voorstel");
   const pdfResp = await page.request.get(`${BASE}/api/files/${pdf.id}`);

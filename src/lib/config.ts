@@ -113,7 +113,8 @@ export interface ContractConfig {
   creditOnPackageChange: "keep_until_period_end" | "prorate" | "reset" | null;
   creditCarryOver: boolean;
   invoicePaymentDays: number;
-  loginLinkHours: number;
+  loginLinkHours: number;        // links in voorstel- en uitnodigingsmails
+  loginRequestMinutes: number;   // zelf aangevraagde inloglinks
 }
 
 export interface HomepageConfig {
@@ -376,6 +377,7 @@ export const DEFAULTS: ConfigMap = {
     creditCarryOver: false,
     invoicePaymentDays: 14,
     loginLinkHours: 72,
+    loginRequestMinutes: 30,
   },
   homepage: {
     title: "Meld je aan bij Bereyl",

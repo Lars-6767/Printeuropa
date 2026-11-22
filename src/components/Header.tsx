@@ -11,7 +11,7 @@ export async function Header({ area }: { area?: "public" | "portal" | "admin" })
       <a href="#inhoud" className="skip">Naar de inhoud</a>
       <div className="container">
         <div className="row" style={{ gap: 10 }}>
-          <Link href="/" className="logo" aria-label="Bereyl, naar de homepage">Bereyl<span className="dot" aria-hidden="true" />{area === "portal" && <small>Mijn Bereyl</small>}{area === "admin" && <small>Beheer</small>}</Link>
+          <Link href="/" className="logo" aria-label="Bereyl, naar de homepage"><img src="/brand/logo.svg" alt="Bereyl" width={78} height={26} />{area === "portal" && <small>Mijn Bereyl</small>}{area === "admin" && <small>Beheer</small>}</Link>
           {demo && <span className="demo-badge" title="Deze omgeving bevat herkenbare demonstratiegegevens">DEMO</span>}
         </div>
         <nav aria-label="Account" className="row" style={{ gap: 6 }}>

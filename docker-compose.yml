@@ -1,0 +1,55 @@
+# Live omgeving: database, webapp, worker, HTTPS (Caddy) en dagelijkse back-up.
+# Start: cp .env.production.example .env.production  →  invullen  →
+#        docker compose --env-file .env.production up -d --build
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bereyl
+      POSTGRES_USER: bereyl
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?zet POSTGRES_PASSWORD}
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U bereyl"], interval: 5s, retries: 20 }
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgres://bereyl:${POSTGRES_PASSWORD}@db:5432/bereyl
+    volumes: [storage:/data/storage]
+    depends_on: { db: { condition: service_healthy } }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      start_period: 90s
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgres://bereyl:${POSTGRES_PASSWORD}@db:5432/bereyl
+    volumes: [storage:/data/storage]
+    command: ["sh", "-c", "npm run check:prod && npm run worker"]
+    depends_on: { app: { condition: service_healthy } }
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?zet DOMAIN, bijv. mijn.bereyl.com}
+    volumes: [./deploy/Caddyfile:/etc/caddy/Caddyfile:ro, caddydata:/data]
+    depends_on: [app]
+
+  backup:
+    image: postgres:16
+    restart: unless-stopped
+    environment: { PGPASSWORD: "${POSTGRES_PASSWORD}" }
+    volumes: [backups:/backups, storage:/data/storage:ro]
+    entrypoint: ["sh", "-c", "while true; do d=$$(date +%F); pg_dump -h db -U bereyl -Fc bereyl > /backups/db-$$d.dump && tar czf /backups/storage-$$d.tgz -C /data storage; find /backups -type f -mtime +30 -delete; sleep 86400; done"]
+    depends_on: { db: { condition: service_healthy } }
+
+volumes: { dbdata: {}, storage: {}, caddydata: {}, backups: {} }

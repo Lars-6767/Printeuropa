@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/newsreader";
+import "@fontsource-variable/red-hat-display";
 import "./globals.css";
 
 export const metadata: Metadata = {

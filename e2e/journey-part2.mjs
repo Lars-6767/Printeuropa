@@ -103,7 +103,7 @@ export async function part2(E) {
   await sp.goto(`${BASE}/beheer/facturen`);
   const row = sp.locator("tr").filter({ hasText: inv2[0].number });
   await row.getByRole("button", { name: "Incasso opnieuw" }).click();
-  await drain(); await sleep(500);
+  for (let i = 0; i < 40 && !(await one(`SELECT 1 FROM payments WHERE invoice_id=$1`, [inv2[0].id])); i++) await sleep(250);
   await sp.goto(`${BASE}/beheer/facturen`);
   await sp.locator("tr").filter({ hasText: inv2[0].number }).getByRole("button", { name: "Demo: betaald" }).click();
   await sleep(800);
@@ -122,7 +122,7 @@ export async function part2(E) {
   const m2 = await mailTo(PM_CUSTOMER, "proposal_ready");
   await p2.goto(linkFrom(m2.html));
   await p2.getByRole("button", { name: "Doorgaan naar Mijn Bereyl" }).click();
-  await p2.getByRole("link", { name: "Ga verder zonder wachtwoord" }).click();
+  await p2.waitForURL(/portaal\/voorstel/);
   check("Voorlopig PrintMasters-voordeel blokkeert akkoord tot controle", await p2.getByText(/Bereyl controleert eerst jullie PrintMasters-afspraak/).waitFor({ timeout: 8000 }).then(() => true, () => false));
   const co2 = (await one(`SELECT id FROM companies WHERE name=$1`, [`Zorggroep Test ${stamp}`])).id;
   check("CRM-taak voor PrintMasters-verificatie", Boolean(await one(`SELECT 1 FROM tasks WHERE type='printmasters_verify' AND company_id=$1`, [co2])));
@@ -297,7 +297,24 @@ export async function part2(E) {
   const nm = await mailTo(NEW, "proposal_ready");
   check("Nieuwe templateversie gebruikt bij verzending", nm.template_version === 2 && nm.subject === "Jouw Bereyl-voorstel staat klaar, Lisa", nm.subject);
 
-  // ---------- 12. Rechten ----------
+  // ---------- 12. Inloggen alleen via e-mail ----------
+  const anonCtx = await browser.newContext(); const ap = await anonCtx.newPage();
+  await ap.goto(`${BASE}/inloggen`);
+  check("Inlogpagina heeft geen wachtwoordveld", (await ap.locator("input[type=password]").count()) === 0);
+  const used = (await q(`SELECT html FROM email_log WHERE template_key='auth_login_link' ORDER BY id LIMIT 1`))[0];
+  await ap.goto(linkFrom(used.html));
+  check("Een gebruikte inloglink werkt niet opnieuw", /inloggen\?verlopen=1/.test(ap.url()));
+  for (let i = 0; i < 6; i++) {
+    await ap.goto(`${BASE}/inloggen`);
+    await ap.getByLabel("E-mailadres").fill("onbekend@voorbeeld.nl");
+    await ap.getByRole("button", { name: "Stuur mij een inloglink" }).click();
+    await sleep(400);
+  }
+  check("Te veel linkaanvragen worden afgeremd", await ap.getByText(/net al een paar links aangevraagd/).isVisible());
+  check("Onbekend adres krijgt geen mail (en geen verraderlijke melding)", !(await one(`SELECT 1 FROM email_log WHERE to_address='onbekend@voorbeeld.nl'`)));
+  await anonCtx.close();
+
+  // ---------- 13. Rechten ----------
   await asStaff(sp, "chauffeur@bereyl.test");
   await sp.goto(`${BASE}/beheer/instellingen`);
   check("Uitvoerend medewerker heeft geen toegang tot instellingen", /geen-toegang/.test(sp.url()));

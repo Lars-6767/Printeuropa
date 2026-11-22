@@ -15,7 +15,7 @@ export default async function Emails() {
       <PageHead title="E-mails" back={{ href: "/beheer/instellingen", label: "Instellingen" }} intro="Klant- en interne berichten. Iedere verzending legt de gebruikte templateversie vast." />
       <div className="table-wrap card" style={{ padding: 8 }}><table className="table small">
         <thead><tr><th>Template</th><th>Voor</th><th>Gebruikt bij</th><th>Versie</th></tr></thead>
-        <tbody>{rows.map((r) => <tr key={r.key}><td><Link href={`/beheer/emails/${r.key}`}>{r.name}</Link></td><td>{r.audience === "internal" ? "Intern" : "Klant"}</td><td>{usedBy(r.key).join(", ") || (r.key.startsWith("auth_") ? "Inloggen en wachtwoord" : "–")}</td><td>{r.published}{r.has_draft && <> <Pill tone="warn">Concept</Pill></>}</td></tr>)}</tbody>
+        <tbody>{rows.map((r) => <tr key={r.key}><td><Link href={`/beheer/emails/${r.key}`}>{r.name}</Link></td><td>{r.audience === "internal" ? "Intern" : "Klant"}</td><td>{usedBy(r.key).join(", ") || (r.key.startsWith("auth_") ? "Inloggen" : "–")}</td><td>{r.published}{r.has_draft && <> <Pill tone="warn">Concept</Pill></>}</td></tr>)}</tbody>
       </table></div>
     </div>
   );

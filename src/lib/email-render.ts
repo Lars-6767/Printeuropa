@@ -77,10 +77,10 @@ export function renderEmail(subject: string, blocks: EmailBlock[], vars: Record<
   const subj = fill(subject, vars, missing, false);
   const body = blocks.map((b) => renderBlock(b, vars, missing)).join("\n");
   const html = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(subj)}</title></head>
-<body style="margin:0;background:#F2F0E8;font-family:Helvetica,Arial,sans-serif;color:#283106">
+<body style="margin:0;background:#F2F0E8;font-family:Georgia,'Times New Roman',serif;color:#283106">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F0E8;padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#F8F7F2;border-radius:16px;padding:32px 28px">
-<tr><td style="padding-bottom:20px;font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#283106">Bereyl<span style="display:inline-block;width:8px;height:8px;background:#B9D53A;border-radius:50%;margin-left:4px"></span></td></tr>
+<tr><td style="padding-bottom:20px"><img src="${(process.env.APP_URL ?? "").replace(/\/$/, "")}/brand/logo.png" alt="Bereyl" width="120" height="40" style="display:block;height:40px;width:auto"></td></tr>
 ${body}
 </table>
 <p style="font-size:12px;color:#5E6448;margin-top:16px">Bereyl · Minervum 7290F, 4817 ZM Breda</p>

@@ -1,7 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { requireCustomer, COMPANY_COOKIE, clientMeta, hashPassword, passwordProblems, activeMemberships, requireUser } from "@/lib/auth";
+import { requireCustomer, COMPANY_COOKIE, clientMeta, activeMemberships, requireUser } from "@/lib/auth";
 import { one, q, tx } from "@/lib/db";
 import { acceptProposal } from "@/lib/proposals";
 import { cancelAppointment, changePreferences, previewEmptying, requestEmptying } from "@/lib/appointments";
@@ -225,17 +225,6 @@ export async function publicImpactAction(fd: FormData): Promise<R> {
     await audit(c, { actor: ctx.user.id, company: ctx.companyId, action: "company.public_impact", entityType: "company", entityId: ctx.companyId, data: { enabled } });
   });
   return { message: enabled ? "Je publieke impactpagina is bijgewerkt." : "De publieke impactpagina staat uit." };
-}
-
-export async function setOwnPasswordAction(fd: FormData): Promise<R> {
-  const user = await requireUser();
-  const pw = String(fd.get("password") ?? "");
-  const problem = passwordProblems(pw);
-  if (problem) return { fieldErrors: { password: problem } };
-  if (pw !== String(fd.get("password2") ?? "")) return { fieldErrors: { password2: "De wachtwoorden zijn niet gelijk." } };
-  await q(`UPDATE users SET password_hash=$2 WHERE id=$1`, [user.id, await hashPassword(pw)]);
-  const next = String(fd.get("next") ?? "");
-  return { redirect: next.startsWith("/") && !next.startsWith("//") ? next : "/portaal?ok=Je wachtwoord is ingesteld" };
 }
 
 export async function startMandateAction(): Promise<R> {

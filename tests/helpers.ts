@@ -8,7 +8,9 @@ import { TEMPLATE_DEFAULTS } from "@/lib/email-defaults";
 export async function resetDb() {
   const db = pool();
   await db.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
-  await db.query(fs.readFileSync(path.resolve("db/migrations/001_init.sql"), "utf8"));
+  for (const f of fs.readdirSync(path.resolve("db/migrations")).filter((f) => f.endsWith(".sql")).sort()) {
+    await db.query(fs.readFileSync(path.resolve("db/migrations", f), "utf8"));
+  }
   for (const key of Object.keys(DEFAULTS) as ConfigKey[]) {
     await q(`INSERT INTO config_versions(key, version, status, data) VALUES ($1,1,'published',$2)`, [key, JSON.stringify(DEFAULTS[key])]);
   }

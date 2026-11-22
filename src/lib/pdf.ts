@@ -1,4 +1,6 @@
 /** PDF-opbouw met pdfkit. Opmaak en zichtbare onderdelen komen uit de PDF-instellingen in beheer. */
+import fs from "node:fs";
+import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { PdfConfig } from "./config";
 
@@ -26,8 +28,9 @@ export async function buildPdf(opts: {
 
   // Kop
   doc.rect(0, 0, doc.page.width, 8).fill(accent);
-  doc.fillColor(INK).font("Helvetica-Bold").fontSize(20).text("Bereyl", 50, 40);
-  doc.circle(132, 50, 4).fill(accent);
+  const logo = path.resolve(process.cwd(), "public/brand/logo.png");
+  if (fs.existsSync(logo)) doc.image(logo, 50, 34, { height: 30 });
+  else doc.fillColor(INK).font("Helvetica-Bold").fontSize(20).text("Bereyl", 50, 40);
   doc.fillColor(INK).font("Helvetica-Bold").fontSize(18).text(opts.title, 50, 85);
   if (opts.subtitle) doc.font("Helvetica").fontSize(11).fillColor(MUTED).text(opts.subtitle);
   doc.moveDown(0.8);

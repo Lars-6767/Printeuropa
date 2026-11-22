@@ -13,22 +13,38 @@ npm install
 cp .env.example .env           # vul DATABASE_URL, APP_URL en SESSION_SECRET in
 npm run db:migrate             # schema
 npm run db:seed                # startconfiguratie, e-mailtemplates, medewerkers, routes, boxen
-npm run dev                    # http://localhost:3000
+npm run dev                    # http://localhost:3000 (inloggen: link uit Beheer → Wachtrij of tabel email_log)
 npm run worker                 # in een tweede terminal: PDF's, e-mail, facturen, betalingen, dagtaken
 ```
 
-Met `DEMO_MODE=true` zet de seed er een herkenbaar demobedrijf bij (gemarkeerd met "DEMO"). Medewerkers krijgen dan het wachtwoord `Bereyl-demo-2026`:
+## Inloggen: alleen via e-mail
 
-| Rol | Account |
-|---|---|
-| Beheerder | admin@bereyl.test |
-| Planner | planner@bereyl.test |
-| Uitvoerend medewerker | chauffeur@bereyl.test |
-| Demoklant | demo-klant@voorbeeld.test |
+Er bestaan geen wachtwoorden. Iedereen (klant en medewerker) logt in met een persoonlijke link die per e-mail wordt verstuurd:
 
-Buiten de demomodus stel je wachtwoorden in via "Wachtwoord vergeten" of zet je `SEED_PASSWORD`.
+- De link werkt één keer en is kort geldig. Zelf aangevraagd: 30 minuten. In voorstel- en uitnodigingsmails: 72 uur. Beide instelbaar onder Beheer → Instellingen → Contractafspraken.
+- De link opent eerst een bevestigingsscherm, zodat virusscanners in mailprogramma's hem niet "opgebruiken".
+- Aanvragen worden afgeremd: 5 per e-mailadres per kwartier en 30 per IP-adres per uur.
+- De melding na een aanvraag is altijd gelijk, zodat niet af te leiden is welke adressen bestaan.
+- Een klant wordt pas aan bedrijfsgegevens gekoppeld nadat de link in de mail is gebruikt.
+- De eerste beheerder maak je op de server met `npm run admin -- naam@bereyl.com "Naam"`. Daarna nodig je collega's uit via Beheer → Gebruikers.
 
-Productie: `npm run build && npm start`. Laat daarnaast `npm run worker` continu draaien, bijvoorbeeld als systemd-service of tweede container. Neem de database en de map `STORAGE_DIR` op in de back-up.
+Zonder mailserver kan niemand inloggen. In productie weigert de app daarom te starten zonder werkende SMTP-koppeling (`npm run check:prod`). Lokaal (`DEMO_MODE=true`) staan de inlogmails in Beheer → Wachtrij en in de tabel `email_log`. De demo-seed maakt testmedewerkers `admin@`, `planner@` en `chauffeur@bereyl.test` aan, plus `demo-klant@voorbeeld.test`.
+
+## Live zetten
+
+Benodigd: een server met Docker (bijv. een VPS in de EU met 2 vCPU en 4 GB), een (sub)domein zoals `mijn.bereyl.com` en een SMTP-dienst voor e-mail.
+
+```bash
+git clone <repo> && cd Printeuropa
+cp .env.production.example .env.production   # domein, e-mail en databasewachtwoord invullen
+docker compose --env-file .env.production up -d --build
+docker compose exec app npm run admin -- naam@bereyl.com "Naam"
+```
+
+- Zet een DNS A-record van het domein naar de server. Caddy regelt het HTTPS-certificaat automatisch.
+- Stel bij de e-maildienst SPF en DKIM in voor het afzenderdomein, anders belanden inlogmails in de spam.
+- De `backup`-service maakt dagelijks een databasedump en een archief van de bestanden, en bewaart die 30 dagen in het volume `backups`. Kopieer ze ook naar een andere locatie.
+- Updaten: `git pull && docker compose --env-file .env.production up -d --build`. Migraties draaien automatisch.
 
 ## Controles
 
@@ -46,7 +62,7 @@ De unittests dekken:
 - toegangsgrenzen van documenten;
 - publicatieregels en e-mailtemplates.
 
-`e2e/journey.mjs` voert 65 controles uit en loopt de opleverroutes uit hoofdstuk 18 door. Alle 65 controles slaagden.
+`e2e/journey.mjs` voert 69 controles uit en loopt de opleverroutes uit hoofdstuk 18 door, inclusief inloggen via e-mail. Alle 69 controles slaagden.
 
 ## Externe koppelingen en activatiepunten
 
@@ -79,7 +95,7 @@ Zolang een tarief ontbreekt, staat het als "nog vast te stellen" in voorstel en 
 - `src/lib/credit.ts` houdt het tegoed bij als mutatielog. De periode-rij wordt vergrendeld, zodat er niet overboekt kan worden.
 - `src/lib/billing.ts` en `payments.ts`: facturen zijn uniek per bron (`source_key`) en provider-events uniek per id. Abonnementen worden achteraf per kalendermaand en pro rata gefactureerd.
 - Rechten: rollen admin/planner/field en customer_admin/customer_member worden op de server gecontroleerd. Een klant krijgt pas toegang tot bedrijfsgegevens nadat de e-maillink bevestigd is.
-- Het gebruikte boxbeeld is een tijdelijke illustratie in `public/boxes`. Vervang het in **Beheer → Instellingen → Boxen en tarieven** door de echte Bereyl-afbeeldingen. Logo en kleuren voor de PDF stel je in onder PDF's.
+- Huisstijl: logo en lettertypen (Newsreader, Red Hat Display) komen van bereyl.com. Het boxbeeld is nog een tijdelijke illustratie in `public/boxes`. Vervang het in **Beheer → Instellingen → Boxen en tarieven** door de echte Bereyl-afbeeldingen. Logo en kleuren voor de PDF stel je in onder PDF's.
 
 ## Bekende beperkingen
 

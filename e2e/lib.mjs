@@ -54,13 +54,24 @@ export function weekdays(fromDays, count) {
   return out;
 }
 
-export async function login(page, email, password = "Bereyl-demo-2026") {
+const sessions = new Map();
+/** Inloggen zoals een echte gebruiker: link aanvragen, link uit de verzonden e-mail openen, doorgaan. */
+export async function login(page, email) {
+  if (sessions.has(email)) {
+    await page.context().clearCookies();
+    await page.context().addCookies(sessions.get(email));
+    return;
+  }
   await page.goto(`${BASE}/inloggen`);
-  const form = page.locator("form").filter({ has: page.getByLabel("Wachtwoord", { exact: true }) });
-  await form.getByLabel("E-mailadres").fill(email);
-  await form.getByLabel("Wachtwoord", { exact: true }).fill(password);
-  await form.getByRole("button", { name: "Inloggen" }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith("/inloggen"), { timeout: 15000 });
+  await page.getByLabel("E-mailadres").fill(email);
+  await page.getByRole("button", { name: "Stuur mij een inloglink" }).click();
+  await page.getByText(/staat er binnen een paar minuten een e-mail/).waitFor();
+  const mail = await one(`SELECT html FROM email_log WHERE to_address=$1 AND template_key='auth_login_link' ORDER BY id DESC LIMIT 1`, [email]);
+  if (!mail) throw new Error(`Geen inlogmail voor ${email}`);
+  await page.goto(linkFrom(mail.html));
+  await page.getByRole("button", { name: "Doorgaan naar Mijn Bereyl" }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth"), { timeout: 15000 });
+  sessions.set(email, await page.context().cookies());
 }
 export async function logout(page) {
   await page.context().clearCookies();

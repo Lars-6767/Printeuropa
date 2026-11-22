@@ -123,7 +123,8 @@ export const CONFIG_SCHEMA: Record<ConfigKey, FieldSpec[]> = {
     { k: "creditOnPackageChange", type: "select", label: "Tegoed bij pakketwissel", options: [{ v: null, l: "Nog vast te stellen (voorlopig: loopt door tot einde periode)" }, { v: "keep_until_period_end", l: "Huidig tegoed loopt door tot einde periode" }, { v: "prorate", l: "Naar rato herberekenen" }, { v: "reset", l: "Nieuwe periode, oud tegoed vervalt" }] },
     { k: "creditCarryOver", type: "bool", label: "Ongebruikte legingen schuiven door naar de volgende periode" },
     { k: "invoicePaymentDays", type: "int", label: "Betaaltermijn facturen (dagen)" },
-    { k: "loginLinkHours", type: "int", label: "Geldigheid inloglink (uren)", min: 1, max: 336 },
+    { k: "loginLinkHours", type: "int", label: "Geldigheid inloglink in voorstel- en uitnodigingsmails (uren)", min: 1, max: 168 },
+    { k: "loginRequestMinutes", type: "int", label: "Geldigheid zelf aangevraagde inloglink (minuten)", min: 5, max: 120 },
   ],
   homepage: [
     { k: "title", type: "text", label: "Hoofdtitel" }, { k: "subtitle", type: "textarea", label: "Ondertekst" },

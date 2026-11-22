@@ -98,7 +98,7 @@ async function handleMail(db: Db, p: any, key: string) {
     const vars = { ...ctx.vars };
     if (r.userId) {
       const contract = await getConfig("contract", db);
-      const token = await issueToken(r.userId, "login", contract.loginLinkHours, db);
+      const token = await issueToken(r.userId, p.event === "member.invited" ? "invite" : "login", contract.loginLinkHours * 60, db);
       vars.portallink = appUrl(`/auth/link?token=${encodeURIComponent(token)}&next=${encodeURIComponent(ctx.linkPath)}`);
       const u = await one<{ name: string }>(`SELECT name FROM users WHERE id=$1`, [r.userId], db);
       vars.voornaam = (u?.name ?? "").split(" ")[0] || vars.voornaam || "";

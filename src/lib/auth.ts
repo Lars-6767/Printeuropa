@@ -16,7 +16,6 @@ export interface User {
   name: string;
   phone: string | null;
   staff_role: StaffRole | null;
-  password_hash: string | null;
   email_verified_at: Date | null;
 }
 export interface Membership { company_id: number; company_name: string; role: "customer_admin" | "customer_member"; status: string }

@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import bcrypt from "bcryptjs";
 import { one, q, type Db } from "./db";
 
 export function randomToken(bytes = 32) {
@@ -9,22 +8,10 @@ export function sha256(v: string) {
   return crypto.createHash("sha256").update(v).digest("hex");
 }
 
-export async function hashPassword(pw: string) {
-  return bcrypt.hash(pw, 12);
-}
-export async function verifyPassword(pw: string, hash: string | null) {
-  if (!hash) return false;
-  return bcrypt.compare(pw, hash);
-}
-export function passwordProblems(pw: string): string | null {
-  if (pw.length < 10) return "Kies een wachtwoord van minimaal 10 tekens.";
-  if (/^(.)\1+$/.test(pw)) return "Kies een minder voorspelbaar wachtwoord.";
-  return null;
-}
-
-export async function issueToken(userId: number, purpose: "login" | "set_password" | "invite", hours: number, db?: Db) {
+/** Eenmalige inloglink. Alleen de hash wordt opgeslagen. */
+export async function issueToken(userId: number, purpose: "login" | "invite", minutes: number, db?: Db) {
   const token = randomToken();
-  await q(`INSERT INTO auth_tokens(user_id, purpose, token_hash, expires_at) VALUES ($1,$2,$3, now() + ($4 || ' hours')::interval)`, [userId, purpose, sha256(token), String(hours)], db);
+  await q(`INSERT INTO auth_tokens(user_id, purpose, token_hash, expires_at) VALUES ($1,$2,$3, now() + ($4 || ' minutes')::interval)`, [userId, purpose, sha256(token), String(Math.round(minutes))], db);
   return token;
 }
 
@@ -52,6 +39,16 @@ export async function peekToken(token: string) {
      FROM auth_tokens t JOIN users u ON u.id=t.user_id WHERE token_hash=$1`,
     [sha256(token)],
   );
+}
+
+/** Maximaal 5 linkaanvragen per e-mailadres per 15 minuten en 30 per IP per uur. */
+export async function loginRequestAllowed(email: string, ip: string | null, db?: Db) {
+  const r = await one<{ by_email: number; by_ip: number }>(
+    `SELECT (SELECT COUNT(*) FROM login_requests WHERE email=$1 AND created_at > now() - interval '15 minutes')::int AS by_email,
+            (SELECT COUNT(*) FROM login_requests WHERE ip=$2 AND created_at > now() - interval '1 hour')::int AS by_ip`, [email, ip], db);
+  await q(`INSERT INTO login_requests(email, ip) VALUES ($1,$2)`, [email, ip], db);
+  await q(`DELETE FROM login_requests WHERE created_at < now() - interval '2 days'`, [], db);
+  return r!.by_email < 5 && (ip === null || r!.by_ip < 30);
 }
 
 export function appUrl(path = "") {

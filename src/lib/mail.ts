@@ -75,7 +75,7 @@ export async function sendTemplatedMail(db: Db, input: SendInput): Promise<{ sta
       if (f) atts.push({ filename: a.filename, content: await readFile(f.path), contentType: f.mime });
     }
     await getTransport().sendMail({
-      from: integ.mailFrom,
+      from: process.env.MAIL_FROM || integ.mailFrom,
       to: input.to,
       cc: input.cc ?? undefined,
       replyTo: replyTo ?? undefined,

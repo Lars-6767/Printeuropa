@@ -125,11 +125,7 @@ export const TEMPLATE_DEFAULTS: TemplateDefault[] = [
   },
   {
     key: "auth_login_link", audience: "external", name: "Inloglink", subject: "Je inloglink voor Mijn Bereyl",
-    blocks: [{ type: "text", text: "Hoi {{voornaam}}, met de knop hieronder log je in bij Mijn Bereyl. De link is persoonlijk en tijdelijk geldig." }, btn("Inloggen bij Mijn Bereyl"), { type: "contact", text: "Heb je geen inloglink aangevraagd? Dan kun je deze e-mail negeren." }],
-  },
-  {
-    key: "auth_password_reset", audience: "external", name: "Wachtwoord instellen", subject: "Kies je wachtwoord voor Mijn Bereyl",
-    blocks: [{ type: "text", text: "Hoi {{voornaam}}, met de knop hieronder kies je een (nieuw) wachtwoord. De link is twee uur geldig." }, { type: "button", label: "Wachtwoord kiezen", url: "{{portallink}}" }, { type: "contact", text: "Heb je dit niet aangevraagd? Dan kun je deze e-mail negeren." }],
+    blocks: [{ type: "text", text: "Hoi {{voornaam}}, met de knop hieronder log je in bij Mijn Bereyl. De link is persoonlijk, werkt één keer en is 30 minuten geldig." }, btn("Inloggen bij Mijn Bereyl"), { type: "contact", text: "Heb je geen inloglink aangevraagd? Dan kun je deze e-mail negeren." }],
   },
   // ---- intern
   { key: "internal_new_request", audience: "internal", name: "Intern: nieuwe aanvraag", subject: "Nieuwe aanvraag {{aanvraagnummer}} · {{bedrijfsnaam}}", blocks: [{ type: "summary", rows: [{ label: "Bedrijf", value: "{{bedrijfsnaam}}" }, { label: "Box", value: "{{boxformaat}} · {{abonnementsnaam}}" }, { label: "Plaats", value: "{{plaats}}" }, { label: "Per maand", value: "{{prijs}}" }] }] },

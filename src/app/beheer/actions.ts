@@ -425,8 +425,9 @@ export async function inviteStaff(fd: FormData): Promise<R> {
   if (!["admin", "planner", "field"].includes(role)) return { fieldErrors: { role: "Kies een rol." } };
   await tx(async (c) => {
     const user = await one<{ id: number }>(`INSERT INTO users(email, name, staff_role) VALUES ($1,$2,$3) ON CONFLICT (email) DO UPDATE SET staff_role=EXCLUDED.staff_role, active=true RETURNING id`, [email, name || email, role], c);
-    const token = await issueToken(user!.id, "set_password", 72, c);
-    await sendTemplatedMail(c, { idempotencyKey: `staff_invite:${user!.id}:${Date.now()}`, templateKey: "auth_password_reset", to: email, vars: { voornaam: name.split(" ")[0] ?? "", portallink: appUrl(`/wachtwoord/instellen?token=${encodeURIComponent(token)}`) } });
+    const contract = await getConfig("contract", c);
+    const token = await issueToken(user!.id, "invite", contract.loginLinkHours * 60, c);
+    await sendTemplatedMail(c, { idempotencyKey: `staff_invite:${user!.id}:${Date.now()}`, templateKey: "auth_login_link", to: email, vars: { voornaam: name.split(" ")[0] ?? "", portallink: appUrl(`/auth/link?token=${encodeURIComponent(token)}&next=%2Fbeheer`) } });
     await audit(c, { actor: u.id, action: "staff.invited", entityType: "user", entityId: user!.id, data: { email, role } });
   });
   return { message: `${email} is uitgenodigd als ${role}.` };
