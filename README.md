@@ -10,7 +10,7 @@ Benodigd: Node 20+ en PostgreSQL 14+.
 
 ```bash
 npm install
-cp .env.example .env           # vul DATABASE_URL, APP_URL en SESSION_SECRET in
+cp .env.example .env           # vul DATABASE_URL en APP_URL in
 npm run db:migrate             # schema
 npm run db:seed                # startconfiguratie, e-mailtemplates, medewerkers, routes, boxen
 npm run dev                    # http://localhost:3000 (inloggen: link uit Beheer → Wachtrij of tabel email_log)
