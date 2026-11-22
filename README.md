@@ -28,11 +28,13 @@ Er bestaan geen wachtwoorden. Iedereen (klant en medewerker) logt in met een per
 - Een klant wordt pas aan bedrijfsgegevens gekoppeld nadat de link in de mail is gebruikt.
 - De eerste beheerder maak je op de server met `npm run admin -- naam@bereyl.com "Naam"`. Daarna nodig je collega's uit via Beheer → Gebruikers.
 
-Zonder mailserver kan niemand inloggen. In productie weigert de app daarom te starten zonder werkende SMTP-koppeling (`npm run check:prod`). Lokaal (`DEMO_MODE=true`) staan de inlogmails in Beheer → Wachtrij en in de tabel `email_log`. De demo-seed maakt testmedewerkers `admin@`, `planner@` en `chauffeur@bereyl.test` aan, plus `demo-klant@voorbeeld.test`.
+Zonder e-mailkoppeling kan niemand inloggen. In productie weigert de app daarom te starten zonder werkende koppeling met Microsoft 365 (of SMTP) (`npm run check:prod`). Lokaal (`DEMO_MODE=true`) staan de inlogmails in Beheer → Wachtrij en in de tabel `email_log`. De demo-seed maakt testmedewerkers `admin@`, `planner@` en `chauffeur@bereyl.test` aan, plus `demo-klant@voorbeeld.test`.
 
 ## Live zetten
 
-Benodigd: een server met Docker (bijv. een VPS in de EU met 2 vCPU en 4 GB), een (sub)domein zoals `mijn.bereyl.com` en een SMTP-dienst voor e-mail.
+Stap-voor-stap voor TransIP, mijn.bereyl.com en Microsoft 365: **[docs/LIVEGANG.md](docs/LIVEGANG.md)**.
+
+Benodigd: een server met Docker (TransIP VPS, 2 vCPU en 4 GB), het subdomein `mijn.bereyl.com` en Microsoft 365 voor e-mail (via een app-registratie met Mail.Send; SMTP kan ook).
 
 ```bash
 git clone <repo> && cd Printeuropa
@@ -70,7 +72,7 @@ Geheime sleutels staan alleen in de serveromgeving. De keuzes (provider, afzende
 
 | Koppeling | Variabelen | Zonder configuratie |
 |---|---|---|
-| E-mail (SMTP) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SECURE` | Berichten worden gelogd ("niet verzonden: mailkoppeling ontbreekt") en zijn te bekijken in Beheer → Wachtrij |
+| E-mail (Microsoft 365) | `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `MAIL_SENDER`, `MAIL_FROM` (of SMTP: `SMTP_HOST` e.a.) | Berichten worden gelogd ("niet verzonden: mailkoppeling ontbreekt") en zijn te bekijken in Beheer → Wachtrij |
 | Routeberekening | `ORS_API_KEY` (openrouteservice) | Vervoer staat op "nog vast te stellen". In demomodus is er een indicatie per postcodegebied. Een ontbrekende afstand is nooit gratis |
 | Betalingen/incasso | `MOLLIE_API_KEY` + provider "Mollie" kiezen | In demomodus is er een gemarkeerde demo-provider. Anders zie je een taak "Incasso niet gestart" |
 | Boekhouding | `ACCOUNTING_PROVIDER`, `ACCOUNTING_API_KEY` | Nog niet gebouwd. Facturen en PDF's worden in de applicatie gemaakt en bewaard |

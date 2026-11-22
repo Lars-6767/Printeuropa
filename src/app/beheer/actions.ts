@@ -412,7 +412,7 @@ export async function sendTestMail(key: string, to: string, subject: string, blo
   if (errs.length) return { error: errs.join(" ") };
   const r = await sendTemplatedMail(pool(), { idempotencyKey: `test:${key}:${Date.now()}`, templateKey: key, to, vars: { ...sampleVariables(), portallink: appUrl("/portaal") }, test: true, template: { subject, blocks, version: 0 } });
   await audit(pool(), { actor: u.id, action: "template.test_sent", entityType: "template", data: { key, to } });
-  return { ok: true, message: r.status === "test" && !process.env.SMTP_HOST ? "Testmail vastgelegd in het e-maillog. Er is geen mailserver gekoppeld, dus het bericht is niet echt verstuurd." : `Testmail verstuurd naar ${to}.` };
+  return { ok: true, message: r.status === "test" && !(await import("@/lib/mail")).mailConfigured() ? "Testmail vastgelegd in het e-maillog. Er is geen mailserver gekoppeld, dus het bericht is niet echt verstuurd." : `Testmail verstuurd naar ${to}.` };
 }
 
 // ---------- Gebruikers ----------

@@ -1,5 +1,5 @@
-/** Verzending en logging van e-mail. Zonder SMTP-configuratie worden berichten gelogd met status 'not_configured'. */
-import nodemailer, { type Transporter } from "nodemailer";
+/** Verzending en logging van e-mail. Zonder mailkoppeling worden berichten gelogd met status 'not_configured'. */
+import { deliver, mailProvider } from "./mail-transport";
 import { one, q, type Db } from "./db";
 import { renderEmail, type EmailBlock } from "./email-render";
 import { getConfig } from "./settings";
@@ -11,22 +11,12 @@ export async function publishedTemplate(key: string, db?: Db) {
   return one<TemplateRow>(`SELECT * FROM email_templates WHERE key=$1 AND status='published'`, [key], db);
 }
 
-export function smtpConfigured() {
-  return Boolean(process.env.SMTP_HOST);
+/** Is er een echte mailkoppeling (Microsoft 365 of SMTP)? */
+export function mailConfigured() {
+  return mailProvider() !== null;
 }
-
-let transport: Transporter | null = null;
-function getTransport() {
-  if (!transport) {
-    transport = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD } : undefined,
-    });
-  }
-  return transport;
-}
+/** @deprecated gebruik mailConfigured */
+export const smtpConfigured = mailConfigured;
 
 export interface SendInput {
   idempotencyKey: string;
@@ -63,8 +53,8 @@ export async function sendTemplatedMail(db: Db, input: SendInput): Promise<{ sta
     id = row!.id;
   }
 
-  if (!smtpConfigured()) {
-    await q(`UPDATE email_log SET status=$2, attempts=attempts+1, error=$3 WHERE id=$1`, [id, input.test ? "test" : "not_configured", ["Mailkoppeling (SMTP) ontbreekt: bericht alleen gelogd.", warning].filter(Boolean).join(" ")], db);
+  if (!mailConfigured()) {
+    await q(`UPDATE email_log SET status=$2, attempts=attempts+1, error=$3 WHERE id=$1`, [id, input.test ? "test" : "not_configured", ["Mailkoppeling ontbreekt: bericht alleen gelogd.", warning].filter(Boolean).join(" ")], db);
     return { status: input.test ? "test" : "not_configured", id };
   }
 
@@ -74,15 +64,15 @@ export async function sendTemplatedMail(db: Db, input: SendInput): Promise<{ sta
       const f = await one<{ path: string; mime: string }>(`SELECT path, mime FROM files WHERE id=$1`, [a.fileId], db);
       if (f) atts.push({ filename: a.filename, content: await readFile(f.path), contentType: f.mime });
     }
-    await getTransport().sendMail({
+    await deliver({
       from: process.env.MAIL_FROM || integ.mailFrom,
       to: input.to,
-      cc: input.cc ?? undefined,
-      replyTo: replyTo ?? undefined,
+      cc: input.cc ?? null,
+      replyTo,
       subject: r.subject,
       html: r.html,
       attachments: atts,
-      headers: { "X-Bereyl-Message": input.idempotencyKey },
+      messageKey: input.idempotencyKey,
     });
     await q(`UPDATE email_log SET status=$2, attempts=attempts+1, sent_at=now(), error=$3 WHERE id=$1`, [id, input.test ? "test" : "sent", warning], db);
     return { status: "sent", id };

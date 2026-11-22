@@ -159,7 +159,7 @@ export async function activationIssues(): Promise<{ area: string; message: strin
   if (cfg.integrations.accountingProvider === "none") out.push({ area: "Koppelingen", message: "Boekhoudpakket is nog niet gekozen.", href: P + "integrations" });
   if (!cfg.integrations.invoiceSender.iban || !cfg.integrations.invoiceSender.coc || !cfg.integrations.invoiceSender.vat) out.push({ area: "Koppelingen", message: "Factuurgegevens (KvK, btw-nummer, IBAN) zijn onvolledig.", href: P + "integrations" });
   if (cfg.integrations.internalRecipients.length === 0) out.push({ area: "Koppelingen", message: "Interne e-mailontvangers zijn nog niet ingesteld.", href: P + "integrations" });
-  if (!process.env.SMTP_HOST) out.push({ area: "Koppelingen", message: "Mailserver (SMTP) is niet geconfigureerd: e-mails worden alleen gelogd.", href: "/beheer/koppelingen" });
+  if (!(await import("./mail-transport")).mailProvider()) out.push({ area: "Koppelingen", message: "E-mail (Microsoft 365) is niet gekoppeld: niemand kan inloggen en e-mails worden alleen gelogd.", href: "/beheer/koppelingen" });
   if (cfg.integrations.routingProvider !== "openrouteservice" || !process.env.ORS_API_KEY) out.push({ area: "Koppelingen", message: "Routeberekening is niet actief: vervoer is een demo-indicatie of nog vast te stellen.", href: "/beheer/koppelingen" });
   return out;
 }

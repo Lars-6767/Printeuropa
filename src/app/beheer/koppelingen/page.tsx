@@ -2,7 +2,8 @@ import { requireStaff } from "@/lib/auth";
 import { getConfigs } from "@/lib/settings";
 import { routingStatus, calculateDistance } from "@/lib/distance";
 import { activeProvider } from "@/lib/payments";
-import { smtpConfigured } from "@/lib/mail";
+import { mailConfigured } from "@/lib/mail";
+import { mailProviderLabel } from "@/lib/mail-transport";
 import { one } from "@/lib/db";
 import { PageHead, Pill } from "@/components/ui";
 import Link from "next/link";
@@ -16,7 +17,7 @@ export default async function Koppelingen({ searchParams }: { searchParams: Prom
   const mailFails = await one<{ n: number }>(`SELECT COUNT(*) AS n FROM email_log WHERE status='failed'`);
   const test = sp.postcode ? await calculateDistance(cfg.transport, cfg.integrations, { postcode: sp.postcode, street: sp.straat }) : null;
   const rows: [string, boolean, string, string][] = [
-    ["E-mail (SMTP)", smtpConfigured(), smtpConfigured() ? `Actief via ${process.env.SMTP_HOST}. Afzender: ${cfg.integrations.mailFrom}. Mislukte verzendingen: ${mailFails!.n}` : "Niet gekoppeld. Berichten worden gelogd maar niet verzonden. Stel SMTP_HOST, SMTP_USER en SMTP_PASSWORD in op de server.", "SMTP_HOST"],
+    ["E-mail", mailConfigured(), mailConfigured() ? `Actief: ${mailProviderLabel()}. Afzender: ${process.env.MAIL_FROM || cfg.integrations.mailFrom}. Mislukte verzendingen: ${mailFails!.n}. Inloggen gaat via deze koppeling.` : "Niet gekoppeld. Niemand kan inloggen en berichten worden alleen gelogd. Stel Microsoft 365 in (MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, MAIL_SENDER).", "MS_TENANT_ID · MS_CLIENT_ID · MS_CLIENT_SECRET · MAIL_SENDER"],
     ["Betalingen en incasso", pay.name === "mollie", pay.message + (pay.name === "demo" ? " — niet voor echte incasso." : ""), "MOLLIE_API_KEY"],
     ["Boekhouding", false, cfg.integrations.accountingProvider === "none" ? "Nog niet gekozen. Facturen worden in de applicatie gemaakt en als PDF bewaard." : `${cfg.integrations.accountingProvider} gekozen; de koppeling moet nog worden gebouwd. Facturen blijven intussen in de applicatie.`, "ACCOUNTING_API_KEY"],
     ["Routeberekening", routing.ready && routing.provider === "openrouteservice", routing.message, "ORS_API_KEY"],
